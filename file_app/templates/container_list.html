@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2>Containers running</h2>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Size</th>
+            <th>Actions</th>
+        </tr>
+        {% for container in containers %}
+        <tr>
+            <td>{{ container.name }}</td>
+            <td>{{ container.size }}</td>
+            <td>
+                <a style="background-color: aquamarine;">Download</a>
+                <a style="background-color: brown;">Delete</a>
+            </td>
+        </tr>
+        {% endfor %}
+{% endblock %}
