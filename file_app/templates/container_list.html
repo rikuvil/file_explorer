@@ -6,13 +6,15 @@
     <table>
         <tr>
             <th>Name</th>
-            <th>Size</th>
+            <th>Status</th>
             <th>Actions</th>
         </tr>
         {% for container in containers %}
         <tr>
             <td>{{ container.name }}</td>
-            <td>{{ container.size }}</td>
+            <td style="color: {% if container.status == 'running' %}green{% elif container.status == 'exited' %}red{% else %}black{% endif %};">
+                {{ container.status }}
+            </td>
             <td>
                 <a style="background-color: aquamarine;">Download</a>
                 <a style="background-color: brown;">Delete</a>

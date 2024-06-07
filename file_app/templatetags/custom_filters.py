@@ -13,6 +13,7 @@ def human_size(size):
         return f'{size_in_bytes / 1024:.2f} KB'
     elif size_in_bytes < 1024**3:
         return f'{size_in_bytes / 1024**2:.2f} MB'
-    else:
+    elif size_in_bytes < 1024**4:
         return f'{size_in_bytes / 1024**3:.2f} GB'
-# 
+    else:
+        return f'{size_in_bytes / 1024**4:.2f} TB'

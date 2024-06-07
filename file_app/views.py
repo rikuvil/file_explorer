@@ -2,16 +2,9 @@ from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse, Http404, FileResponse
 import docker
 import os
+from .models import *
+from .functions.size import *
 
-# Functions here:
-
-def get_size(path):
-    total_size = 0
-    for dirpath, dirnames, filenames in os.walk(path):
-        for f in filenames:
-            fp = os.path.join(dirpath, f)
-            total_size += os.path.getsize(fp)
-    return total_size
 # Create your views here.
 
 def index(request):
@@ -24,11 +17,12 @@ def container_list_view(request):
         containers = client.containers.list(all=True)
         container_list = []
         for container in containers:
+            image_tag = container.image.tags[0] if container.image.tags else 'Unknown'
             container_list.append({
                 'id': container.id,
                 'name': container.name,
                 'status': container.status,
-                'image': container.image.tags[0],
+                'image': image_tag,
                 'created': container.attrs['Created'],
                 'ports': container.attrs['NetworkSettings']['Ports']
             })
@@ -38,29 +32,24 @@ def container_list_view(request):
     
     return render(request, 'container_list.html', {'containers': container_list})
 
-
-
 def container_detail_view(request):
     client = docker.from_env()
-
     try:
         container = client.containers.get(request.GET.get('id'))
+        image_tag = container.image.tags[0] if container.image.tags else 'Unknown'
         container_detail = {
             'id': container.id,
             'name': container.name,
             'status': container.status,
-            'image': container.image.tags[0],
+            'image': image_tag,
             'created': container.attrs['Created'],
             'ports': container.attrs['NetworkSettings']['Ports'],
             'environment': container.attrs['Config']['Env'],
             'volumes': container.attrs['Mounts']
         }
-
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-    
     return render(request, 'container_detail.html', {'container': container_detail})
-
 
 def file_list_view(request, path=''):
     base_path = '/mnt/'
@@ -72,10 +61,7 @@ def file_list_view(request, path=''):
     files = []
     for entry in os.listdir(full_path):
         entry_path = os.path.join(full_path, entry)
-        if os.path.isdir(entry_path):
-            size = get_size(entry_path)
-        else:
-            size = os.path.getsize(entry_path)
+        size = get_size(entry_path)
         files.append({
             'name': entry,
             'path': os.path.join(path, entry),
@@ -85,7 +71,6 @@ def file_list_view(request, path=''):
 
     return render(request, 'file_list.html', {'files': files, 'path': path})
 
-                                              
 def file_detail_view(request, path):
     base_path = '/mnt/'
     full_path = os.path.join(base_path, path)
@@ -99,9 +84,6 @@ def file_detail_view(request, path):
         with open(full_path, 'r') as f:
             response = FileResponse(f)
             return response
-        
-    
-        
 
 def file_upload_view(request):
     return render(request, 'file_upload.html')
